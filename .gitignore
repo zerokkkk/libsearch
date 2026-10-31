@@ -8,3 +8,5 @@ third_party/
 .hf-cache/
 *.log
 link-cmds.txt
+README-dev.md
+PROGRESS.md
