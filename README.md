@@ -22,7 +22,8 @@ chunk 以"相对路径 + 内容哈希"标识，不含绝对路径。
     paraphrase-multilingual-MiniLM-L12-v2\   # fp32 版；在用（config 默认）
     paraphrase-multilingual-MiniLM-L12-v2-onnx-Q\   # INT8 量化版（手工克隆自 Qdrant repo）
     ParaphraseMLMiniLML12V2Q\              # `model pull` 下载的量化版（预设名 = fastembed 变体名）
-    dict\cc-cedict\                          # lindera CC-CEDICT 词典（源码编译产物）
+  dict\
+    cc-cedict\                              # lindera CC-CEDICT 词典（源码编译产物）
   third_party\
     onnxruntime-win-x64-1.31.1\              # onnxruntime.dll（运行时动态加载）
   testdata\                                 # 测试语料（demo 库的 root）
@@ -58,7 +59,7 @@ chunk 以"相对路径 + 内容哈希"标识，不含绝对路径。
 - daemon（仅 Windows）：`cargo build` 同时产出 `target\debug\daemon.exe`；启动 `daemon.exe --home <程序目录> [--warm <lib>]`；见下文「daemon」
 - 程序目录（home）解析优先级：`--home <目录>` 全局参数 > 环境变量 `LIBSEARCH_HOME` > 当前 exe 所在目录（**exe 为符号链接时先跟链到真实路径**）
 - onnxruntime 动态加载：`onnxruntime.dll` 放 exe 旁，或设 `ORT_DYLIB_PATH` 指向具体文件 `third_party\onnxruntime-win-x64-1.31.1\lib\onnxruntime.dll`（指到顶层目录会加载失败）
-- FTS 词典：lindera 是 path 依赖（`..\query\lindera\lindera`，在本仓库之外），其 build 脚本在构建期从 lindera.dev 下载 CC-CEDICT-MeCab 并编译词典（需网络；缓存目录已设 `LINDERA_BUILD_DICTIONARY_CACHE_DIR`），产物落 `models\dict\cc-cedict\`；词典缺失时 FTS 自动回退原文，不报错
+- FTS 词典：lindera 是 path 依赖（`..\query\lindera\lindera`，在本仓库之外），其 build 脚本在构建期从 lindera.dev 下载 CC-CEDICT-MeCab 并编译词典（需网络；缓存目录已设 `LINDERA_BUILD_DICTIONARY_CACHE_DIR`），产物落 `dict\cc-cedict\`；词典缺失时 FTS 自动回退原文，不报错
 - 可选用户词典 `userdict.csv`（程序目录根下；lindera 用户词典 CSV，按主词典 `metadata.json` 的 `user_dictionary_schema` 解析）：存在时参与索引/查询两端 FTS 分词
 
 ## CLI
@@ -143,7 +144,7 @@ libsearch model pull --repo <org/name> --file <repo内路径> [--dir <名>] [--e
     "dir": "models/paraphrase-multilingual-MiniLM-L12-v2"
   },
   "fts": {
-    "dict_dir": "models/dict/cc-cedict"
+    "dict_dir": "dict/cc-cedict"
   }
 }
 ```
@@ -234,7 +235,7 @@ RRF 融合公式: $score(d) = \sum_l w_l / (k + rank_l(d))$
 - 向量检索 v1 用暴力扫描（10 万 chunk × 384 维 ≈ 每查询 4×10⁷ 次乘加；本机单线程实测：release ~51ms、debug ~518ms，`probe_scan` 探针）；后续可加 usearch HNSW
 - 嵌入模型：`paraphrase-multilingual-MiniLM-L12-v2`（384d，中英混合语料）
 - BM25 查询构造：lindera 词项 OR 连接；纯 ASCII 词加 * 前缀；BM25 分数归一化 $s' = |s|/(1+|s|)$
-- FTS5 中文：lindera CC-CEDICT 词级分词（`models\dict\cc-cedict`；词典缺失时回退原文）
+- FTS5 中文：lindera CC-CEDICT 词级分词（`dict\cc-cedict`；词典缺失时回退原文）
 
 嵌入模型实现用 fastembed（crate 名 `fastembed`，v7）加载本地模型文件：`try_new_from_user_defined`
 （本地 ONNX + 4 个 tokenizer 文件；pooling 按模型目录名查预设表推导，见「嵌入模型」节）。

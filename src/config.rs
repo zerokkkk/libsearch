@@ -14,7 +14,7 @@ fn d_fusion_method() -> String { "rrf".to_string() }
 fn d_methods() -> Vec<String> { vec!["bm25".to_string(), "vector".to_string()] }
 fn d_weights() -> Vec<f32> { vec![1.0, 1.0] }
 fn d_embedding_dir() -> String { crate::model_tokenizer::MODEL_DIR_NAME.to_string() }
-fn d_dict_dir() -> Option<String> { Some("models/dict/cc-cedict".to_string()) }
+fn d_dict_dir() -> Option<String> { Some("dict/cc-cedict".to_string()) }
 fn d_exclude() -> Vec<String> {
     vec!["(^|/)(\\.git|node_modules|target|\\.venv|dist|build)(/|$)".to_string()]
 }
@@ -249,7 +249,7 @@ mod tests {
         assert!(cfg.dir_filter.include.is_empty());
         assert_eq!(cfg.dir_filter.exclude.len(), 1);
         assert_eq!(cfg.embedding.dir, "models/paraphrase-multilingual-MiniLM-L12-v2");
-        assert_eq!(cfg.fts.dict_dir, Some("models/dict/cc-cedict".to_string()));
+        assert_eq!(cfg.fts.dict_dir, Some("dict/cc-cedict".to_string()));
     }
 
     #[test]

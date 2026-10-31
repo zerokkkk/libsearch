@@ -11,7 +11,7 @@
   - `src/reindex.rs`：哈希 diff 增量 reindex（文件级事务整体替换旧 chunk；`--full` 全量重建）
   - `src/model_tokenizer.rs`：嵌入模型 subword tokenizer（HF `tokenizers` crate；
     **加载后清除 tokenizer.json 自带的 truncation**，否则长文本被静默截断到 128 token）
-  - `src/ftstok.rs`：可选 CC-CEDICT 预分词——`models/dict/cc-cedict/` 存在时
+  - `src/ftstok.rs`：可选 CC-CEDICT 预分词——`dict/cc-cedict/` 存在时
     FTS 文本用 lindera 分词结果，否则存原文（词典已从源码编译落地，策略 B 生效）
   - chunk 元数据落库：`kind`/`strategy`/`seq`/字符偏移 `[start_off, end_off)`/
     `start_line`/`end_line`/`content_hash`/`model_fp`
@@ -24,7 +24,7 @@
 - **P2 预备**（本次）：
   - FTS 策略定为 **B**（lindera CC-CEDICT 词级分词）：建一次性 crate（`lindera-cc-cedict` path 依赖）并设
     `LINDERA_BUILD_DICTIONARY_CACHE_DIR`，build 脚本自动从 lindera.dev 抓取 CC-CEDICT-MeCab 并编译词典
-    → `models/dict/cc-cedict/`（dict.words 16MB + trie/vals/索引）；`main.rs` 词典路径改为目录 + `is_dir()`
+    → `dict/cc-cedict/`（dict.words 16MB + trie/vals/索引）；`main.rs` 词典路径改为目录 + `is_dir()`
   - 嵌入实现定案：fastembed（crate 名 `fastembed` v7）`try_new_from_user_defined` 加载本地
     ONNX + 4 个 tokenizer 文件，Mean pooling（与模型 `1_Pooling` 配置一致）；默认 feature
     `ort-download-binaries` 下载的 pyke 静态 onnxruntime（/MT CRT）与 Rust /MD 链接冲突（LNK2005）
@@ -106,7 +106,7 @@
 ## 待你定的决策
 
 1. ~~FTS5 中文策略~~ → **已定 B**：lindera CC-CEDICT 词级分词（索引/查询端同分词）；
-   词典从源码编译落地 `models/dict/cc-cedict/`
+   词典从源码编译落地 `dict/cc-cedict/`
 2. ~~rusqlite 版本~~ → **保持 0.32.1**（bundled，工作正常）
 3. ~~嵌入窗口策略~~ → **定 C**：chunk 改 512 token（仅配置）；每块恰好落满窗口、整块嵌入无截断
    （最接近 qmd 语义：qmd 默认模型 embeddinggemma-300M 窗口 2048 ≥ 900 块）；默认与 demo 库

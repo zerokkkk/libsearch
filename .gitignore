@@ -3,6 +3,7 @@ database/
 testdata/
 P3test/
 models/
+dict/
 third_party/
 .hf-cache/
 *.log
