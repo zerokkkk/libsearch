@@ -2,7 +2,7 @@ use std::borrow::Cow;
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
-use lindera::dictionary::{load_dictionary, load_user_dictionary_for};
+use lindera::dictionary::{load_dictionary, load_user_dictionary};
 use lindera::mode::Mode;
 use lindera::segmenter::Segmenter;
 use sha2::{Digest, Sha256};
@@ -14,19 +14,18 @@ pub struct FtsTokenizer {
 
 impl FtsTokenizer {
     /// dict_dir：lindera 词典目录（含 metadata.json 与编译产物）；user_dict_csv：用户词典 CSV（可无）
-    /// 用户词典按主词典 metadata.json 的 user_dictionary_schema 解析（lindera 内置 load_user_dictionary_for）
+    /// 用户词典按主词典 metadata.json 的 user_dictionary_schema 解析（lindera 内置 load_user_dictionary）
     pub fn load(dict_dir: &Path, user_dict_csv: Option<&Path>) -> Result<Self> {
         let dictionary = load_dictionary(dict_dir.to_str().context("词典路径须为 UTF-8")?)
             .map_err(|e| anyhow::anyhow!("加载词典 {} 失败: {e}", dict_dir.display()))?;
         let user = match user_dict_csv {
             Some(p) if p.is_file() => Some(
-                load_user_dictionary_for(p.to_str().context("用户词典路径须为 UTF-8")?, &dictionary)
+                load_user_dictionary(p.to_str().context("用户词典路径须为 UTF-8")?, &dictionary.metadata)
                     .map_err(|e| anyhow::anyhow!("加载用户词典 {} 失败: {e}", p.display()))?,
             ),
             _ => None,
         };
-        let segmenter = Segmenter::try_new(Mode::Normal, dictionary, user)
-            .map_err(|e| anyhow::anyhow!("初始化分词器失败: {e}"))?;
+        let segmenter = Segmenter::new(Mode::Normal, dictionary, user);
         Ok(Self { segmenter })
     }
 

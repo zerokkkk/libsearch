@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
-use libsearch::{db, home, libs, model, reindex, search};
+use libsearch::{db, dict, home, libs, model, reindex, search};
 
 #[derive(Parser)]
 #[command(
@@ -56,6 +56,11 @@ enum Cmd {
     Model {
         #[command(subcommand)]
         cmd: ModelCmd,
+    },
+    /// 词典管理
+    Dict {
+        #[command(subcommand)]
+        cmd: DictCmd,
     },
 
     /// daemon 存活检查
@@ -127,6 +132,21 @@ enum ModelCmd {
     },
 }
 
+#[derive(Subcommand)]
+enum DictCmd {
+    /// 从 GitHub releases 下载预编译词典到 dict/<name>
+    Download {
+        /// 词典名（ipadic / ipadic-neologd / unidic / sudachidict / ko-dic / cc-cedict / jieba）
+        name: String,
+        /// 重新下载并替换已有词典
+        #[arg(long)]
+        force: bool,
+        /// 词典版本（须与加载器 format_version 匹配）
+        #[arg(long, default_value = "6.2.0")]
+        version: String,
+    },
+}
+
 fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
     let home = home::program_dir(cli.home.as_deref())?;
@@ -188,6 +208,12 @@ fn run(cli: &Cli, home: &std::path::Path) -> anyhow::Result<()> {
                     extra: extra.clone(),
                 };
                 let target = model::pull(home, &spec)?;
+                println!("完成: {}", target.display());
+            }
+        },
+        Cmd::Dict { cmd } => match cmd {
+            DictCmd::Download { name, force, version } => {
+                let target = dict::download(home, name, version, *force)?;
                 println!("完成: {}", target.display());
             }
         },

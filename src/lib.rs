@@ -3,6 +3,7 @@
 pub mod chunking;
 pub mod config;
 pub mod db;
+pub mod dict;
 pub mod embed;
 pub mod ftstok;
 pub mod home;

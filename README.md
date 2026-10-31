@@ -23,7 +23,7 @@ chunk 以"相对路径 + 内容哈希"标识，不含绝对路径。
     paraphrase-multilingual-MiniLM-L12-v2-onnx-Q\   # INT8 量化版（手工克隆自 Qdrant repo）
     ParaphraseMLMiniLML12V2Q\              # `model pull` 下载的量化版（预设名 = fastembed 变体名）
   dict\
-    cc-cedict\                              # lindera CC-CEDICT 词典（源码编译产物）
+    cc-cedict\                              # lindera CC-CEDICT 词典（预编译产物，`dict download` 下载）
   third_party\
     onnxruntime-win-x64-1.31.1\              # onnxruntime.dll（运行时动态加载）
   testdata\                                 # 测试语料（demo 库的 root）
@@ -41,6 +41,7 @@ chunk 以"相对路径 + 内容哈希"标识，不含绝对路径。
 | SQLite schema 与连接 | `src/db.rs` |
 | 切块：breakpoints + generic-kv 模板 | `src/chunking.rs` |
 | 模型管理：pooling 推导 + 模型下载（`model pull`） | `src/model.rs` |
+| 词典管理：预编译词典下载（`dict download`） | `src/dict.rs` |
 | 嵌入模型 tokenizer（token 计数 / 偏移）+ model_fp 计算 | `src/model_tokenizer.rs` |
 | FTS 分词（lindera CC-CEDICT + 用户词典） | `src/ftstok.rs` |
 | fastembed 嵌入封装 | `src/embed.rs` |
@@ -59,7 +60,7 @@ chunk 以"相对路径 + 内容哈希"标识，不含绝对路径。
 - daemon（仅 Windows）：`cargo build` 同时产出 `target\debug\daemon.exe`；启动 `daemon.exe --home <程序目录> [--warm <lib>]`；见下文「daemon」
 - 程序目录（home）解析优先级：`--home <目录>` 全局参数 > 环境变量 `LIBSEARCH_HOME` > 当前 exe 所在目录（**exe 为符号链接时先跟链到真实路径**）
 - onnxruntime 动态加载：`onnxruntime.dll` 放 exe 旁，或设 `ORT_DYLIB_PATH` 指向具体文件 `third_party\onnxruntime-win-x64-1.31.1\lib\onnxruntime.dll`（指到顶层目录会加载失败）
-- FTS 词典：lindera 是 path 依赖（`..\query\lindera\lindera`，在本仓库之外），其 build 脚本在构建期从 lindera.dev 下载 CC-CEDICT-MeCab 并编译词典（需网络；缓存目录已设 `LINDERA_BUILD_DICTIONARY_CACHE_DIR`），产物落 `dict\cc-cedict\`；词典缺失时 FTS 自动回退原文，不报错
+- FTS 词典：lindera 6.2.0（crates.io 依赖）；预编译词典经 `libsearch dict download cc-cedict` 下载到 `dict\cc-cedict\`（来源 GitHub releases）；词典缺失时 FTS 自动回退原文，不报错
 - 可选用户词典 `userdict.csv`（程序目录根下；lindera 用户词典 CSV，按主词典 `metadata.json` 的 `user_dictionary_schema` 解析）：存在时参与索引/查询两端 FTS 分词
 
 ## CLI
@@ -75,6 +76,7 @@ libsearch --home <程序目录> <cmd>
 | `lib remove <id> [-y]` | 删库（整目录含索引）；默认交互确认，`-y` 跳过 |
 | `reindex <lib> [--full]` | 增量重建（哈希 diff）；`--full` 强制全量重建 |
 | `model pull <preset> \| --repo <org/name> --file <路径> [--dir <名>] [--extra <路径>]...` | 下载嵌入模型到 `models\<名>` 并验证加载（见「嵌入模型」）；两种来源形式互斥 |
+| `dict download <name> [--force] [--version <v>]` | 从 GitHub releases 下载预编译词典到 `dict\<name>\` 并验证可加载；name：ipadic / ipadic-neologd / unidic / sudachidict / ko-dic / cc-cedict / jieba |
 | `search <lib> <query> [--json] [--daemon]` | 检索（默认 text 输出；`--json` 出 JSON；`--daemon` 走常驻 daemon） |
 | `ping` | daemon 存活检查（Windows，打印 `pong`） |
 | `status` | daemon 状态 JSON：home / pipe / uptime / 各库文件数 / 已缓存模型与分词器（Windows） |

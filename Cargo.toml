@@ -11,13 +11,16 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 sha2 = "0.10"
-lindera = { path = "../query/lindera/lindera", default-features = false, features = ["mmap"] }
+lindera = { version = "6.2.0", default-features = false, features = ["mmap"] }
 tokenizers = { version = "0.23", default-features = false, features = ["onig"] }
 fastembed = { version = "7", default-features = false, features = ["onnx", "ort-load-dynamic"] }
 # 模型下载（model pull，走 hf-hub 同步 API + ureq）
 hf-hub = { version = "0.5", default-features = false, features = ["ureq", "native-tls"] }
 # 仅用其 Error 类型区分 404（hf-hub 的传递依赖，同版本去重）
 ureq = { version = "3", default-features = false }
+# 词典下载（dict download，GitHub releases zip；zip/flate2 配置与 lindera-cli 相同）
+zip = { version = "9.0.0", default-features = false, features = ["deflate-flate2"] }
+flate2 = { version = "1.1.9", default-features = false, features = ["rust_backend"] }
 
 [target.'cfg(windows)'.dependencies]
 named_pipe = "0.4.1"
